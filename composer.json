@@ -1,6 +1,6 @@
 {
     "name": "youcast/php-lib-gemini",
-    "description": "Google Gemini APIを使用するPHPライブラリ",
+    "description": "Google AI (Gemini, Lyria, Translate, Nano Banana, Veo) を扱うPHPライブラリ",
     "type": "library",
     "license": "MIT",
     "authors": [
