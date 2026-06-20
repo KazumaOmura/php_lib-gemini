@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use YouCast\Gemini\Exceptions\GeminiApiRequestException;
 use YouCast\Gemini\Gemini\Dto\AudioResponseDto;
 use YouCast\Gemini\Gemini\Enums\AiModel;
+use YouCast\Gemini\Gemini\Enums\SpeechSpeed;
 use YouCast\Gemini\Gemini\Enums\Voice;
 use YouCast\Gemini\Gemini\GeminiClient;
 use YouCast\Gemini\Tests\Unit\CurlMockState;
@@ -96,6 +97,59 @@ class GeminiClientAudioTest extends TestCase
             'Puck',
             $requestData['generationConfig']['speechConfig']['voiceConfig']['prebuiltVoiceConfig']['voiceName']
         );
+    }
+
+    public function test_generate_audio_prepends_speed_instruction_when_speed_is_given(): void
+    {
+        $this->setTtsResponse();
+
+        $client = new GeminiClient('test-key', AiModel::GEMINI_2_5_FLASH_TTS);
+        $client->generateAudio('吾輩は猫である', Voice::KORE, null, SpeechSpeed::SLOW);
+
+        $requestData = $client->getRequestData();
+        $sentText = $requestData['contents'][0]['parts'][0]['text'];
+
+        $this->assertSame('Say the following slowly: 吾輩は猫である', $sentText);
+    }
+
+    public function test_generate_audio_does_not_modify_prompt_when_speed_is_normal(): void
+    {
+        $this->setTtsResponse();
+
+        $client = new GeminiClient('test-key', AiModel::GEMINI_2_5_FLASH_TTS);
+        $client->generateAudio('Hi', Voice::KORE, null, SpeechSpeed::NORMAL);
+
+        $requestData = $client->getRequestData();
+        $this->assertSame('Hi', $requestData['contents'][0]['parts'][0]['text']);
+    }
+
+    public function test_generate_audio_does_not_modify_prompt_when_speed_is_null(): void
+    {
+        $this->setTtsResponse();
+
+        $client = new GeminiClient('test-key', AiModel::GEMINI_2_5_FLASH_TTS);
+        $client->generateAudio('Hi', Voice::KORE);
+
+        $requestData = $client->getRequestData();
+        $this->assertSame('Hi', $requestData['contents'][0]['parts'][0]['text']);
+    }
+
+    public function test_generate_multi_speaker_audio_prepends_speed_instruction(): void
+    {
+        $this->setTtsResponse();
+
+        $client = new GeminiClient('test-key', AiModel::GEMINI_2_5_FLASH_TTS);
+        $client->generateMultiSpeakerAudio(
+            'Joe: Hi. Jane: Hello.',
+            ['Joe' => Voice::KORE, 'Jane' => Voice::PUCK],
+            null,
+            SpeechSpeed::FAST,
+        );
+
+        $requestData = $client->getRequestData();
+        $sentText = $requestData['contents'][0]['parts'][0]['text'];
+
+        $this->assertSame('Say the following at a fast pace: Joe: Hi. Jane: Hello.', $sentText);
     }
 
     public function test_generate_multi_speaker_audio_builds_speaker_configs(): void

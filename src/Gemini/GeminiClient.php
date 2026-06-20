@@ -13,6 +13,7 @@ use YouCast\Gemini\Gemini\Dto\ResponseDto;
 use YouCast\Gemini\Gemini\Enums\AiModel;
 use YouCast\Gemini\Gemini\Enums\HarmBlockThreshold;
 use YouCast\Gemini\Gemini\Enums\HarmCategory;
+use YouCast\Gemini\Gemini\Enums\SpeechSpeed;
 use YouCast\Gemini\Gemini\Enums\Voice;
 
 /**
@@ -218,16 +219,18 @@ class GeminiClient
      * @param string $prompt 読み上げるテキスト（"Say cheerfully: ..." のようにスタイル指示も可）
      * @param Voice $voice 使う音声（既定: KORE）
      * @param AiModel|null $model 明示的にTTSモデルを指定したい場合
+     * @param SpeechSpeed|null $speed 話速プリセット。指定するとプロンプト先頭に自然言語の指示を自動付与する
      */
     public function generateAudio(
         string $prompt,
         Voice $voice = Voice::KORE,
         ?AiModel $model = null,
+        ?SpeechSpeed $speed = null,
     ): AudioResponseDto {
         $tts_model = $this->resolveTtsModel($model);
 
         return $this->executeAudioRequest(
-            prompt: $prompt,
+            prompt: $this->applySpeedInstruction($prompt, $speed),
             model: $tts_model,
             speech_config: [
                 'voiceConfig' => [
@@ -245,11 +248,13 @@ class GeminiClient
      * @param string $prompt 会話形式のプロンプト（例: "TTS the following conversation between Joe and Jane: Joe: ... Jane: ..."）
      * @param array<string, Voice> $speakers ['Joe' => Voice::KORE, 'Jane' => Voice::PUCK]
      * @param AiModel|null $model 明示的にTTSモデルを指定したい場合
+     * @param SpeechSpeed|null $speed 話速プリセット。指定するとプロンプト先頭に自然言語の指示を自動付与する
      */
     public function generateMultiSpeakerAudio(
         string $prompt,
         array $speakers,
         ?AiModel $model = null,
+        ?SpeechSpeed $speed = null,
     ): AudioResponseDto {
         if (empty($speakers)) {
             throw new \InvalidArgumentException('speakers は1人以上指定してください');
@@ -269,7 +274,7 @@ class GeminiClient
         }
 
         return $this->executeAudioRequest(
-            prompt: $prompt,
+            prompt: $this->applySpeedInstruction($prompt, $speed),
             model: $this->resolveTtsModel($model),
             speech_config: [
                 'multiSpeakerVoiceConfig' => [
@@ -277,6 +282,21 @@ class GeminiClient
                 ],
             ],
         );
+    }
+
+    /**
+     * 話速プリセットをプロンプト先頭に自然言語の指示として付与する
+     */
+    private function applySpeedInstruction(string $prompt, ?SpeechSpeed $speed): string
+    {
+        if ($speed === null) {
+            return $prompt;
+        }
+        $instruction = $speed->toPromptInstruction();
+        if ($instruction === null) {
+            return $prompt;
+        }
+        return $instruction . ': ' . $prompt;
     }
 
     /**
