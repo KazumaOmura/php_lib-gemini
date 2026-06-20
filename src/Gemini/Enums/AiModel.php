@@ -13,6 +13,24 @@ enum AiModel: string
     case GEMINI_2_5_FLASH = 'gemini-2.5-flash';
     case GEMINI_2_0_FLASH = 'gemini-2.0-flash';
 
+    // TTS (Text-to-Speech) モデル
+    case GEMINI_3_1_FLASH_TTS = 'gemini-3.1-flash-tts-preview';
+    case GEMINI_2_5_FLASH_TTS = 'gemini-2.5-flash-preview-tts';
+    case GEMINI_2_5_PRO_TTS = 'gemini-2.5-pro-preview-tts';
+
+    /**
+     * TTS (音声生成) 用モデルかどうか
+     */
+    public function isTts(): bool
+    {
+        return match ($this) {
+            self::GEMINI_3_1_FLASH_TTS,
+            self::GEMINI_2_5_FLASH_TTS,
+            self::GEMINI_2_5_PRO_TTS => true,
+            default => false,
+        };
+    }
+
     private const BASE_URL = 'https://generativelanguage.googleapis.com';
     private const API_VERSION = 'v1beta';
     private const VERTEX_AI_API_VERSION = 'v1';

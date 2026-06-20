@@ -2,16 +2,18 @@
 
 namespace YouCast\Gemini\Gemini;
 
-use YouCast\Gemini\Gemini\Enums\AiModel;
-use YouCast\Gemini\Gemini\Enums\HarmCategory;
-use YouCast\Gemini\Gemini\Enums\HarmBlockThreshold;
-use YouCast\Gemini\Gemini\Dto\GenerationConfigDto;
-use YouCast\Gemini\Gemini\Dto\ResponseDto;
-use YouCast\Gemini\Gemini\Dto\BatchResponseDto;
+use YouCast\Gemini\Common\Curl;
 use YouCast\Gemini\Exceptions\GeminiApiKeyException;
 use YouCast\Gemini\Exceptions\GeminiApiRequestException;
+use YouCast\Gemini\Gemini\Dto\AudioResponseDto;
+use YouCast\Gemini\Gemini\Dto\BatchResponseDto;
+use YouCast\Gemini\Gemini\Dto\GenerationConfigDto;
 use YouCast\Gemini\Gemini\Dto\InlineDataDto;
-use YouCast\Gemini\Common\Curl;
+use YouCast\Gemini\Gemini\Dto\ResponseDto;
+use YouCast\Gemini\Gemini\Enums\AiModel;
+use YouCast\Gemini\Gemini\Enums\HarmBlockThreshold;
+use YouCast\Gemini\Gemini\Enums\HarmCategory;
+use YouCast\Gemini\Gemini\Enums\Voice;
 
 /**
  * Google Gemini APIのクライアント
@@ -177,5 +179,161 @@ class GeminiClient
     public function getRequestData(): array
     {
         return $this->request_data;
+    }
+
+    /**
+     * テキスト生成（フリーテキスト返却）
+     *
+     * Gemini API でプレーンなテキストレスポンスを得る最短経路。
+     *
+     * @param string $prompt プロンプト
+     * @param InlineDataDto[] $inline_data 画像・PDF・file_uri等の追加入力
+     */
+    public function generateText(string $prompt, array $inline_data = []): ResponseDto
+    {
+        return $this->request($prompt, $inline_data, is_batch: false, json_mode: false);
+    }
+
+    /**
+     * JSON生成（responseMimeType=application/json）
+     *
+     * モデルが純粋なJSONだけを返すよう強制する。`json_decode($response->getContent(), true)` でそのまま使える。
+     *
+     * @param string $prompt プロンプト
+     * @param InlineDataDto[] $inline_data 画像・PDF・file_uri等の追加入力
+     */
+    public function generateJson(string $prompt, array $inline_data = []): ResponseDto
+    {
+        return $this->request($prompt, $inline_data, is_batch: false, json_mode: true);
+    }
+
+    /**
+     * 音声生成 (Text-to-Speech)
+     *
+     * Gemini TTSを使ってテキストを読み上げ、PCM音声(Base64)を返す。
+     *
+     * - コンストラクタの $model がTTSモデル (`AiModel::isTts() === true`) なら、それを使う。
+     * - そうでなければ $model 引数のフォールバック、それも null なら GEMINI_2_5_FLASH_TTS を使う。
+     *
+     * @param string $prompt 読み上げるテキスト（"Say cheerfully: ..." のようにスタイル指示も可）
+     * @param Voice $voice 使う音声（既定: KORE）
+     * @param AiModel|null $model 明示的にTTSモデルを指定したい場合
+     */
+    public function generateAudio(
+        string $prompt,
+        Voice $voice = Voice::KORE,
+        ?AiModel $model = null,
+    ): AudioResponseDto {
+        $tts_model = $this->resolveTtsModel($model);
+
+        return $this->executeAudioRequest(
+            prompt: $prompt,
+            model: $tts_model,
+            speech_config: [
+                'voiceConfig' => [
+                    'prebuiltVoiceConfig' => ['voiceName' => $voice->value],
+                ],
+            ],
+        );
+    }
+
+    /**
+     * 複数話者の音声生成 (Multi-speaker TTS)
+     *
+     * 会話形式のテキストと、各話者名 → Voice のマッピングを与えると、話者ごとに音声を切り替えて読み上げる。
+     *
+     * @param string $prompt 会話形式のプロンプト（例: "TTS the following conversation between Joe and Jane: Joe: ... Jane: ..."）
+     * @param array<string, Voice> $speakers ['Joe' => Voice::KORE, 'Jane' => Voice::PUCK]
+     * @param AiModel|null $model 明示的にTTSモデルを指定したい場合
+     */
+    public function generateMultiSpeakerAudio(
+        string $prompt,
+        array $speakers,
+        ?AiModel $model = null,
+    ): AudioResponseDto {
+        if (empty($speakers)) {
+            throw new \InvalidArgumentException('speakers は1人以上指定してください');
+        }
+
+        $speaker_configs = [];
+        foreach ($speakers as $speaker_name => $voice) {
+            if (!$voice instanceof Voice) {
+                throw new \InvalidArgumentException('speakers の値は Voice enum である必要があります');
+            }
+            $speaker_configs[] = [
+                'speaker' => $speaker_name,
+                'voiceConfig' => [
+                    'prebuiltVoiceConfig' => ['voiceName' => $voice->value],
+                ],
+            ];
+        }
+
+        return $this->executeAudioRequest(
+            prompt: $prompt,
+            model: $this->resolveTtsModel($model),
+            speech_config: [
+                'multiSpeakerVoiceConfig' => [
+                    'speakerVoiceConfigs' => $speaker_configs,
+                ],
+            ],
+        );
+    }
+
+    /**
+     * TTS用モデルを決定する
+     */
+    private function resolveTtsModel(?AiModel $model): AiModel
+    {
+        if ($model !== null) {
+            return $model;
+        }
+        if ($this->model->isTts()) {
+            return $this->model;
+        }
+        return AiModel::GEMINI_2_5_FLASH_TTS;
+    }
+
+    /**
+     * TTSリクエスト本体
+     *
+     * @param array $speech_config "voiceConfig" or "multiSpeakerVoiceConfig" を含むspeechConfig
+     */
+    private function executeAudioRequest(string $prompt, AiModel $model, array $speech_config): AudioResponseDto
+    {
+        try {
+            $this->request_data = [
+                'contents' => [
+                    ['parts' => [['text' => $prompt]]],
+                ],
+                'generationConfig' => [
+                    'responseModalities' => ['AUDIO'],
+                    'speechConfig' => $speech_config,
+                ],
+            ];
+
+            $response = Curl::post(
+                $model->getGenerateContentUrl(),
+                [
+                    'x-goog-api-key: ' . $this->api_key,
+                    'Content-Type: application/json',
+                ],
+                $this->request_data,
+            );
+
+            return new AudioResponseDto($response);
+        } catch (GeminiApiKeyException | GeminiApiRequestException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new GeminiApiRequestException(
+                '音声生成で予期しないエラーが発生しました: ' . $e->getMessage(),
+                $e->getCode(),
+                $e,
+                [
+                    'prompt' => $prompt,
+                    'model' => $model->value,
+                    'original_error' => $e->getMessage(),
+                ]
+            );
+        }
     }
 }

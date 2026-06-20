@@ -145,4 +145,40 @@ class GeminiClientTest extends TestCase
         $this->assertNotEmpty($client->getRequestData());
         $this->assertArrayHasKey('contents', $client->getRequestData());
     }
+
+    public function test_generate_text_omits_response_mime_type(): void
+    {
+        CurlMockState::setJsonResponse([
+            'candidates' => [
+                ['content' => ['parts' => [['text' => 'plain text']]]],
+            ],
+        ]);
+
+        $client = new GeminiClient('test-key', AiModel::GEMINI_2_0_FLASH);
+        $result = $client->generateText('Hello');
+
+        $this->assertInstanceOf(ResponseDto::class, $result);
+        $this->assertSame('plain text', $result->getContent());
+
+        $requestData = $client->getRequestData();
+        $this->assertArrayNotHasKey('generationConfig', $requestData);
+    }
+
+    public function test_generate_json_sets_response_mime_type(): void
+    {
+        CurlMockState::setJsonResponse([
+            'candidates' => [
+                ['content' => ['parts' => [['text' => '{"answer":42}']]]],
+            ],
+        ]);
+
+        $client = new GeminiClient('test-key', AiModel::GEMINI_2_5_FLASH);
+        $result = $client->generateJson('Return a JSON');
+
+        $this->assertInstanceOf(ResponseDto::class, $result);
+        $this->assertSame('{"answer":42}', $result->getContent());
+
+        $requestData = $client->getRequestData();
+        $this->assertSame('application/json', $requestData['generationConfig']['responseMimeType']);
+    }
 }
