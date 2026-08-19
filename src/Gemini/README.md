@@ -15,14 +15,19 @@ Google Gemini API のクライアント群。テキスト生成、JSON生成、*
 
 ### テキスト/マルチモーダル
 
-| ケース | モデル名 |
-|---|---|
-| `GEMINI_3_1_PRO` | `gemini-3.1-pro-preview` |
-| `GEMINI_3_PRO` | `gemini-3-pro-preview` |
-| `GEMINI_3_FLASH` | `gemini-3-flash-preview` |
-| `GEMINI_2_5_PRO` | `gemini-2.5-pro` |
-| `GEMINI_2_5_FLASH` | `gemini-2.5-flash` |
-| `GEMINI_2_0_FLASH` | `gemini-2.0-flash` |
+| ケース | モデル名 | 備考 |
+|---|---|---|
+| `GEMINI_3_7_FLASH` | `gemini-3.7-flash` | 最新（2026-08-13 GA） |
+| `GEMINI_3_6_FLASH` | `gemini-3.6-flash` | 2026-07-21 GA |
+| `GEMINI_3_5_FLASH` | `gemini-3.5-flash` | 2026-05-19 GA |
+| `GEMINI_3_5_FLASH_LITE` | `gemini-3.5-flash-lite` | 低コスト・低レイテンシ |
+| `GEMINI_3_1_FLASH_LITE` | `gemini-3.1-flash-lite` | 低コスト・低レイテンシ |
+| `GEMINI_3_1_PRO` | `gemini-3.1-pro-preview` | 高度な推論（preview） |
+| `GEMINI_3_FLASH` | `gemini-3-flash-preview` | preview |
+| `GEMINI_2_5_PRO` | `gemini-2.5-pro` | |
+| `GEMINI_2_5_FLASH` | `gemini-2.5-flash` | |
+| `GEMINI_3_PRO` | `gemini-3-pro-preview` | ⚠️ 2026年提供終了。後方互換のため残置 |
+| `GEMINI_2_0_FLASH` | `gemini-2.0-flash` | ⚠️ 2026-06-01 提供終了。後方互換のため残置 |
 
 ### 音声生成 (TTS)
 

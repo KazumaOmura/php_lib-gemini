@@ -4,10 +4,10 @@ Google AI の各種サービスを PHP から扱う統合クライアントラ�
 
 | プロバイダ | 機能 | 主なモデル | ドキュメント |
 |---|---|---|---|
-| **Gemini** | テキスト生成 / マルチモーダル / バッチ / File API | `gemini-3-pro-preview`, `gemini-3.1-pro-preview`, `gemini-2.5-pro` 他 | [src/Gemini/README.md](src/Gemini/README.md) |
+| **Gemini** | テキスト生成 / マルチモーダル / バッチ / File API | `gemini-3.7-flash`, `gemini-3.1-pro-preview`, `gemini-2.5-pro` 他 | [src/Gemini/README.md](src/Gemini/README.md) |
 | **Lyria** | 音楽生成（最長3分の楽曲・歌詞付き） | `lyria-3-pro-preview`, `lyria-3-clip-preview` | [src/Lyria/README.md](src/Lyria/README.md) |
 | **Translate** | Google Cloud Translation API | NMT | [src/Translate/README.md](src/Translate/README.md) |
-| **NanoBanana** | 画像生成・画像編集（Gemini Image系） | `gemini-3-pro-image-preview` (Nano Banana Pro)他 | [src/NanoBanana/README.md](src/NanoBanana/README.md) |
+| **NanoBanana** | 画像生成・画像編集（Gemini Image系） | `gemini-3-pro-image` (Nano Banana Pro)他 | [src/NanoBanana/README.md](src/NanoBanana/README.md) |
 | **Veo** | 動画生成（LROポーリング） | `veo-3.1-generate-preview` | [src/Veo/README.md](src/Veo/README.md) |
 
 ## インストール
@@ -20,7 +20,7 @@ Google AI の各種サービスを PHP から扱う統合クライアントラ�
         { "type": "vcs", "url": "https://github.com/KazumaOmura/php_lib-gemini" }
     ],
     "require": {
-        "youcast/php-lib-gemini": "^2.0"
+        "youcast/php-lib-gemini": "^1.2"
     }
 }
 ```
@@ -70,7 +70,7 @@ echo $response->getContent();
 use YouCast\Gemini\NanoBanana\NanoBananaClient;
 use YouCast\Gemini\NanoBanana\Enums\ImageModel;
 
-$client = new NanoBananaClient(getenv('GEMINI_API_KEY'), ImageModel::GEMINI_3_PRO_IMAGE_PREVIEW);
+$client = new NanoBananaClient(getenv('GEMINI_API_KEY'), ImageModel::GEMINI_3_PRO_IMAGE);
 $client->generateImage('夕焼けの海辺、油絵風', __DIR__ . '/sunset.png');
 ```
 

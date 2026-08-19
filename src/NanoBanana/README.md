@@ -7,10 +7,13 @@ Google Gemini Image 系（Nano Banana / Nano Banana Pro）のクライアント�
 | ケース | モデル名 | 通称 |
 |---|---|---|
 | `GEMINI_2_5_FLASH_IMAGE` | `gemini-2.5-flash-image` | Nano Banana |
-| `GEMINI_3_PRO_IMAGE_PREVIEW` | `gemini-3-pro-image-preview` | **Nano Banana Pro** |
-| `GEMINI_3_1_FLASH_IMAGE_PREVIEW` | `gemini-3.1-flash-image-preview` | Nano Banana 3.1 Flash |
+| `GEMINI_3_PRO_IMAGE` | `gemini-3-pro-image` | **Nano Banana Pro**（GA） |
+| `GEMINI_3_1_FLASH_IMAGE` | `gemini-3.1-flash-image` | Nano Banana 2（GA） |
+| `GEMINI_3_1_FLASH_LITE_IMAGE` | `gemini-3.1-flash-lite-image` | Nano Banana 2 Lite（GA） |
+| `GEMINI_3_PRO_IMAGE_PREVIEW` | `gemini-3-pro-image-preview` | ⚠️ preview。GA版へ移行推奨 |
+| `GEMINI_3_1_FLASH_IMAGE_PREVIEW` | `gemini-3.1-flash-image-preview` | ⚠️ preview。GA版へ移行推奨 |
 
-> 通称：Nano Banana = Gemini の画像生成系全般、Nano Banana Pro = Gemini 3 Pro Image Preview。
+> 通称：Nano Banana = Gemini の画像生成系全般、Nano Banana Pro = Gemini 3 Pro Image（GA）。
 
 ## 注意：HTTPクライアント
 
@@ -28,7 +31,7 @@ use YouCast\Gemini\NanoBanana\Enums\ImageModel;
 
 $client = new NanoBananaClient(
     api_key: getenv('GEMINI_API_KEY'),
-    model:   ImageModel::GEMINI_3_PRO_IMAGE_PREVIEW,  // Nano Banana Pro
+    model:   ImageModel::GEMINI_3_PRO_IMAGE,  // Nano Banana Pro
 );
 
 $response = $client->generateImage(
@@ -255,7 +258,7 @@ URLからの画像参照で MIME 判定が厳しすぎる場合は `is_image_val
 ```php
 $client = new NanoBananaClient(
     api_key: getenv('GEMINI_API_KEY'),
-    model: ImageModel::GEMINI_3_PRO_IMAGE_PREVIEW,
+    model: ImageModel::GEMINI_3_PRO_IMAGE,
     is_image_validation: false,
 );
 ```

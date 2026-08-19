@@ -34,6 +34,24 @@ class NanoBananaSmokeTest extends TestCase
         );
     }
 
+    public function test_ga_image_models_return_correct_api_url(): void
+    {
+        $this->assertSame(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image:generateContent',
+            ImageModel::GEMINI_3_PRO_IMAGE->getApiUrl()
+        );
+
+        $this->assertSame(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent',
+            ImageModel::GEMINI_3_1_FLASH_IMAGE->getApiUrl()
+        );
+
+        $this->assertSame(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-image:generateContent',
+            ImageModel::GEMINI_3_1_FLASH_LITE_IMAGE->getApiUrl()
+        );
+    }
+
     public function test_image_model_batch_url(): void
     {
         $this->assertSame(

@@ -73,6 +73,29 @@ class AiModelTest extends TestCase
         $this->assertSame(AiModel::GEMINI_2_5_PRO, AiModel::fromString('gemini-2.5-pro'));
     }
 
+    public function test_from_string_resolves_new_flash_models(): void
+    {
+        $this->assertSame(AiModel::GEMINI_3_7_FLASH, AiModel::fromString('gemini-3.7-flash'));
+        $this->assertSame(AiModel::GEMINI_3_6_FLASH, AiModel::fromString('gemini-3.6-flash'));
+        $this->assertSame(AiModel::GEMINI_3_5_FLASH, AiModel::fromString('gemini-3.5-flash'));
+        $this->assertSame(AiModel::GEMINI_3_5_FLASH_LITE, AiModel::fromString('gemini-3.5-flash-lite'));
+        $this->assertSame(AiModel::GEMINI_3_1_FLASH_LITE, AiModel::fromString('gemini-3.1-flash-lite'));
+    }
+
+    public function test_new_flash_models_build_generate_content_url(): void
+    {
+        $this->assertSame(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent',
+            AiModel::GEMINI_3_7_FLASH->getGenerateContentUrl()
+        );
+    }
+
+    public function test_new_flash_models_are_not_tts(): void
+    {
+        $this->assertFalse(AiModel::GEMINI_3_7_FLASH->isTts());
+        $this->assertFalse(AiModel::GEMINI_3_5_FLASH_LITE->isTts());
+    }
+
     public function test_from_string_invalid_throws_exception(): void
     {
         $this->expectException(InvalidArgumentException::class);

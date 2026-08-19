@@ -6,11 +6,24 @@ use InvalidArgumentException;
 
 enum AiModel: string
 {
+    // Gemini 3.x Flash 系（GA / stable）
+    case GEMINI_3_7_FLASH = 'gemini-3.7-flash';       // 最新（2026-08-13 GA）
+    case GEMINI_3_6_FLASH = 'gemini-3.6-flash';       // 2026-07-21 GA
+    case GEMINI_3_5_FLASH = 'gemini-3.5-flash';       // 2026-05-19 GA
+    case GEMINI_3_5_FLASH_LITE = 'gemini-3.5-flash-lite'; // 2026-07-21 GA
+    case GEMINI_3_1_FLASH_LITE = 'gemini-3.1-flash-lite'; // 2026-05-07 GA
+
+    // Gemini 3.x Pro / Flash 系（preview）
     case GEMINI_3_1_PRO = 'gemini-3.1-pro-preview';
-    case GEMINI_3_PRO = 'gemini-3-pro-preview';
     case GEMINI_3_FLASH = 'gemini-3-flash-preview';
+
+    // Gemini 2.5 系（GA）
     case GEMINI_2_5_PRO = 'gemini-2.5-pro';
     case GEMINI_2_5_FLASH = 'gemini-2.5-flash';
+
+    /** @deprecated 2026年に提供終了（Shut down）。後方互換のため残置。 */
+    case GEMINI_3_PRO = 'gemini-3-pro-preview';
+    /** @deprecated 2026-06-01 に提供終了（Shut down）。後方互換のため残置。 */
     case GEMINI_2_0_FLASH = 'gemini-2.0-flash';
 
     // TTS (Text-to-Speech) モデル
